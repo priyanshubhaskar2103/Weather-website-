@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+   <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Weather Forecast</h1>
+            <p>Get accurate weather information for any location</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" class="search-input" id="locationInput" placeholder="Enter city name (e.g., London, New York)">
+                <button class="search-btn" id="searchBtn">
+                    <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="weatherContainer">
+            <div class="weather-card">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Getting your location and weather data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WeatherApp {
+            constructor() {
+                this.apiKey = 'demo'; // Using demo mode for this example
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.getCurrentLocationWeather();
+            }
+
+            bindEvents() {
+                const searchBtn = document.getElementById('searchBtn');
+                const locationInput = document.getElementById('locationInput');
+
+                searchBtn.addEventListener('click', () => this.searchWeather());
+                locationInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.searchWeather();
+                });
+            }
+
+            async getCurrentLocationWeather() {
+                try {
+                    // For demo purposes, show default location
+                    await this.getWeatherData('London');
+                } catch (error) {
+                    this.showError('Unable to get your location. Please search for a city.');
+                }
+            }
+
+            async searchWeather() {
+                const location = document.getElementById('locationInput').value.trim();
+                if (!location) {
+                    this.showError('Please enter a city name');
+                    return;
+                }
+
+                this.showLoading();
+                await this.getWeatherData(location);
+            }
+
+            async getWeatherData(location) {
+                try {
+                    // Simulated weather data for demo purposes
+                    const weatherData = this.generateDemoWeatherData(location);
+                    await this.delay(1000); // Simulate API call delay
+                    this.displayWeather(weatherData);
+                } catch (error) {
+                    this.showError('Weather data not available. Please try another location.');
+                }
+            }
+
+            generateDemoWeatherData(location) {
+                const temps = [18, 22, 25, 19, 16, 21, 24];
+                const descriptions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear', 'Overcast'];
+                const currentTemp = temps[Math.floor(Math.random() * temps.length)];
+                const description = descriptions[Math.floor(Math.random() * descriptions.length)];
+
+                return {
+                    location: location,
+                    current: {
+                        temp: currentTemp,
+                        description: description,
+                        humidity: Math.floor(Math.random() * 40) + 40,
+                        windSpeed: Math.floor(Math.random() * 15) + 5,
+                        pressure: Math.floor(Math.random() * 50) + 1000,
+                        feelsLike: currentTemp + Math.floor(Math.random() * 6) - 3
+                    },
+                    forecast: this.generateForecast()
+                };
+            }
+
+            generateForecast() {
+                const days = ['Today', 'Tomorrow', 'Wednesday', 'Thursday', 'Friday'];
+                const forecast = [];
+                
+                for (let i = 0; i < 5; i++) {
+                    forecast.push({
+                        day: days[i],
+                        high: Math.floor(Math.random() * 15) + 20,
+                        low: Math.floor(Math.random() * 10) + 10,
+                        description: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)]
+                    });
+                }
+                
+                return forecast;
+            }
+
+            displayWeather(data) {
+                const container = document.getElementById('weatherContainer');
+                container.innerHTML = `
+                    <div class="weather-card">
+                        <div class="current-weather">
+                            <div class="location">${data.location}</div>
+                            <div class="temperature">${data.current.temp}°C</div>
+                            <div class="description">${data.current.description}</div>
+                        </div>
+                        
+                        <div class="weather-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Feels Like</div>
+                                <div class="detail-value">${data.current.feelsLike}°C</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Humidity</div>
+                                <div class="detail-value">${data.current.humidity}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Wind Speed</div>
+                                <div class="detail-value">${data.current.windSpeed} km/h</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Pressure</div>
+                                <div class="detail-value">${data.current.pressure} hPa</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="forecast-container">
+                        <div class="forecast-title">5-Day Forecast</div>
+                        <div class="forecast-grid">
+                            ${data.forecast.map(day => `
+                                <div class="forecast-item">
+                                    <div class="forecast-day">${day.day}</div>
+                                    <div class="forecast-temp">${day.high}°/${day.low}°</div>
+                                    <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8);">${day.description}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            showLoading() {
+                const container = document.getElementById('weatherContainer');
+                container.innerHTML = `
+                    <div class="weather-card">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Fetching weather data...</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showError(message) {
+                const container = document.getElementById('weatherContainer');
+                container.innerHTML = `
+                    <div class="weather-card">
+                        <div class="error">
+                            <h3>⚠️ Error</h3>
+                            <p>${message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the weather app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new WeatherApp();
+        });
+    </script>
+</body>
+</html>
